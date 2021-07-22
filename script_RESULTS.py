@@ -2,29 +2,45 @@
 """
 Created on Tue May 11 12:21:48 2021
 
-@author: Mariano
+@author: Mariano Montoro Mendoza
+
+Script dedicado a la creacion y presentacion de los resultados de manera 
+grafica.
+
+Lo que se ejecuta en este script esta descrito en el apartado 
+"4 Resultados" del documento de mi Trabajo Fin de Master (TFM).
+
+Titulo: "Caracterizacion sectorial de la conectividad movil 
+en España mediante datos abiertos".
+Autor: Mariano Montoro Mendoza.
+Tutora: Zoraida Frías Barroso.
+Cotutor: Luis Mendo Tomás.
+Fecha de lectura: 14 de julio de 2021.
+
 """
 
 import os
 tfm_dir = "D://Dropbox/Escritorio/TFM/Workspace_spyder/" 
 os.chdir(tfm_dir)
 import pandas as pd
-from my_functions import osm, geo, dis
 import geopandas as gpd
 
 import numpy as np
-import math
 import matplotlib.pyplot as plt
 
-#%%
+#%% Cargamos las columnas para representar los resultados desagregados 
+# por capacidad de la estación
+
 cols = ["nst_site", "nst_low", "nst_medium", "nst_high"]
 list_colors_cols = ['black', 'red', 'lime', 'blue']
     
-#%%
+#%% Cargamos las columnas para representar los resultados desagregados 
+# por banda de frecuencia de cada celda
+
 cols = ["nst_site", "nst_800", "nst_1800", "nst_2100", "nst_2600"]
 list_colors_cols = ['black', 'red', 'green', 'lightgreen', 'aqua']
 
-#%%
+#%% Cargamos las variables y datos utilizados en este script
 
 dict_cities1 = {\
 'Valencia': 7e5, 'Sevilla': 750e3, 'Palma': 4e5,\
@@ -65,10 +81,13 @@ for col in cols:
     df_t[col] = df_t[col] * 1000
 df_t = df_t[df_t.pob > 0]
 
-#%% Grafos 1
+#%% TIPO DE GRAFICAS: NUBE DE PUNTOS
 
+#%% 4.6 Por tamaño del municipio
+# color POR COLUMNA
+# 1 figura
+# Datos utilizados: sector Turismo
 
-#%% 1.1 Turismo POR COLUMNA (1 figuras)
 plt.close('all')
 
 c = 0
@@ -126,7 +145,12 @@ plt.xlim(1, 200000)
 plt.ylim(10, 6000000)
 plt.legend(fontsize = 15)
 
-#%% 1.2. Turismo POR COM AUT (n_cols figuras)
+#%% 4.X Por tamaño del municipio y comunidad autónoma
+# color POR COMUNIDAD AUTONOMA
+# una figura POR COLUMNA
+# Numero de figuras: Numero de columnas
+# Datos utilizados: sector Turismo
+
 plt.close('all')
 
 list_com = []
@@ -162,9 +186,14 @@ for n_fig in range(1, len(cols)):
     plt.xlim(1, 200000)
     plt.ylim(10, 6000000)
     plt.legend(fontsize = 15)
-    
-#%% 1.3. Turismo POR COLUMNA
-# PRESENTADO POR COM AUT (17 figuras)
+
+
+#%% 4.7 Por tamaño del municipio y comunidad autonoma
+# color POR COLUMNA
+# una figura POR COMUNIDAD AUTONOMA
+# Numero de figuras: Comunidades Autonomas
+# Datos utilizados: sector Turismo
+
 plt.close('all')
 
 city1_iter = iter(dict_cities1.keys())
@@ -208,11 +237,14 @@ for i in range(len(list_com)):
     plt.legend(fontsize = 15)
 
 
-#%% Grafos 2
+#%% TIPO DE GRAFICAS: PORCENTAJE ACUMULADO POR DISTANCIA
 
 
-#%% 2.1. Acumulativas POR SECTOR
-# PRESENTADO POR COLUMNAS (n_cols figuras)
+#%% 4.1 Por sector economico
+# color POR SECTOR ECONOMICO
+# una figura POR COLUMNA
+# Numero de figuras: Numero de columnas
+
 plt.close('all')
 x_axis = [0.01,0.015,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,\
           0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,\
@@ -242,9 +274,13 @@ for n_fig in range(len(cols)):
     plt.annotate("500 m", (460, -2))
     plt.annotate("2.000 m", (1900, -2))
     plt.annotate("5.000 m", (4600, -2))
-    
-#%% 2.2. Acumulativas POR SECTOR
-# PRESENTADO POR COLUMNA y POR COM AUT (n_cols x 19 figuras)
+
+
+#%% 4.2 Por sector economico y comunidad autonoma
+# color POR SECTOR ECONOMICO
+# una figura POR COLUMNA y POR COMUNIDAD AUTONOMA
+# Numero de figuras: Numero de columnas x Comunidades Autonomas
+
 for i in range(len(list_df)):
     df = list_df[i]
     df = df[df.groupby('comunidadA')\
@@ -290,9 +326,12 @@ for col in cols:
         plt.annotate("2.000 m", (1900, -2))
         plt.annotate("5.000 m", (4600, -2))
         n_fig = n_fig + 1
-    
-#%% 2.3. Acumulativas POR COM AUT
-# PRESENTADO POR SECTOR y COLUMNA (n_cols x n_sectors figuras)
+
+#%% 4.3 Por comunidad autonoma
+# color POR COMUNIDAD AUTONOMA
+# una figura POR COLUMNA y POR SECTOR ECONOMICO
+# Numero de figuras: Numero de columnas x Numero de sectores economicos
+
 plt.close('all')
 x_axis = [0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50]
 x_axis = [0.01,0.015,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,\
@@ -356,9 +395,13 @@ for col in cols:
         plt.annotate("2.000 m", (1900, -2))
         plt.annotate("5.000 m", (4600, -2))
         n_fig = n_fig + 1
-    
-#%% 2.4. Acumulativas POR COLUMNA
-# PRESENTADO POR SECTOR (n_sectors figuras)
+
+#%% 4.4 Por capacidad de la estacion y sector economico
+# 4.5 Por banda de frecuencia y sector economico
+# color POR COLUMNA
+# una figura POR SECTOR ECONOMICO
+# Numero de figuras: Numero de sectores economicos
+
 plt.close('all')
 x_axis = [0.01,0.015,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,\
           0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,\
@@ -395,9 +438,7 @@ for sector in dict_sectors:
     plt.annotate("5.000 m", (4600, -2))
     n_fig = n_fig + 1
 
-#%% Stats
-
-
+#%% EXTRAER ALGUNAS ESTADISTICAS EXTRA
 
 
 #%% Extraer histograma por rangos

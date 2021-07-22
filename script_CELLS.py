@@ -2,74 +2,38 @@
 """
 Created on Fri Feb  5 13:56:49 2021
 
-@author: Mariano
+@author: Mariano Montoro Mendoza
+
+Script dedicado a cargar los datos de infraestructura de red movil y a su 
+posterior procesado. Las fuentes de datos utilizadas son OpenCelliD y 
+Mozilla Location Service.
+
+Lo que se ejecuta en este script esta descrito en el apartado 
+"3.2 Infraestructura de red movil en España" del documento de mi 
+Trabajo Fin de Master (TFM). 
+
+Titulo: "Caracterizacion sectorial de la conectividad movil 
+en España mediante datos abiertos".
+Autor: Mariano Montoro Mendoza.
+Tutora: Zoraida Frías Barroso.
+Cotutor: Luis Mendo Tomás.
+Fecha de lectura: 14 de julio de 2021.
+
 """
-# Load LIBRARIES
+
 import os
 tfm_dir = "D://Dropbox/Escritorio/TFM/Workspace_spyder/" 
 os.chdir(tfm_dir)
-# Subset that makes a cell unique according to the standard
+# Subset that makes a cell unique according to the LTE standard
 my_subset = ['cell', 'net', 'mcc']
 
 import pandas as pd
 from my_functions import cel, dis
 from datetime import datetime
-from collections import Counter
+#from collections import Counter
 
-#%% 0 - Load DFs and Merge with extra information
-startTime = datetime.now()
-print(startTime)
-print("Start Load MLS")
-df_mls_raw = pd.read_csv("input/MLS-full-cell-export-2021-02-04T000000.csv")
-df_mls_clean = cel.clean_df(df_mls_raw, "MLS")
-df_mls_clean['source'] = 'mls'
-df_mls_clean['enbid'],df_mls_clean['cellid']=divmod(df_mls_clean['cell'],256)
-df_mls_band = cel.add_band(df_mls_clean)
-df_mls_final = cel.del_dup_recent_area(df_mls_band)
-df_mls_final.to_csv('output/MLS_final.csv', index = False)
-print("Just for checking, duplicates must be 0")
-df_mls_final = cel.del_dup_max_samples(df_mls_final, my_subset)
-print("End Load MLS")
-endTime = datetime.now()
-print(endTime)
-print()
-
-startTime = datetime.now()
-print(startTime)
-print("Start Load OID")
-df_oid_raw = pd.read_csv("input/cell_towers_2021-02-10-T000000.csv")
-df_oid_clean =  cel.clean_df(df_oid_raw, "OID")
-df_oid_clean['source'] = 'oid'
-df_oid_clean['enbid'],df_oid_clean['cellid']=divmod(df_oid_clean['cell'],256)
-df_oid_band = cel.add_band(df_oid_clean)
-df_oid_final = cel.del_dup_recent_area(df_oid_band)
-df_oid_final.to_csv('output/OID_final.csv', index = False)
-print("Just for checking, duplicates must be 0")
-df_oid_final = cel.del_dup_max_samples(df_oid_final, my_subset)
-print("End Load OID")
-endTime = datetime.now()
-print(endTime)
-print()
-
-startTime = datetime.now()
-print(startTime)
-print("Start Mrege") 
-df_oid_final = pd.read_csv("output/OID_final.csv")
-df_mls_final = pd.read_csv("output/MLS_final.csv")
-df_merged = df_mls_final.append(df_oid_final, ignore_index=True)
-df_merged_2 = cel.del_dup_recent_area(df_merged)
-#Debe eliminar los mismos usando ambos subsets.
-#my_subset = ['cell', 'net', 'mcc', 'area']
-df_cells = cel.del_dup_max_samples(df_merged_2, my_subset)
-df_cells['site_lat'] = df_cells.lat
-df_cells['site_lon'] = df_cells.lon
-df_cells['errorKm'] = 0    
-df_cells.to_csv('output/CELLS.csv', index = False)
-print("End Mrege")
-endTime = datetime.now()
-print(endTime)
-
-#%% 1.1 - Load DFs (10 min)
+#%% 3.2.1 - Cargamos los datos y hacemos el filtrado inicial
+# Tiempo estimado de ejecucion: 10 min
 startTime = datetime.now()
 print(startTime)
 print("Start Load MLS")
@@ -91,13 +55,15 @@ endTime = datetime.now()
 print(endTime)
 print()
 
-# Solape Inicial informativo
+# Solape Inicial entre MLS y OCID. Meramente informativo
 df_mls_inf = cel.del_dup_max_samples(df_mls_clean, my_subset)
 df_oid_inf = cel.del_dup_max_samples(df_oid_clean, my_subset)
 df_dup_inf = df_mls_inf.append(df_oid_inf, ignore_index=True)
 df_no_dup_inf = cel.del_dup_max_samples(df_dup_inf, my_subset)
 
-#%% 1.2 - Merge (30 min)
+#%% 3.2.2 - Eliminamos duplicados 
+# 3.2.3 - Fusionamos las bases de datos
+# Tiempo estimado de ejecucion: 30 min
 startTime = datetime.now()
 print(startTime)
 print("Start Mrege") 
@@ -115,7 +81,8 @@ print("End Mrege")
 endTime = datetime.now()
 print(endTime)
 
-#%% 2 - Cells clustering (10 min.)
+#%% 3.2.4 - Agrupamos las celdas en estaciones
+# Tiempo estimado de ejecucion: 10 min
 startTime = datetime.now()
 print(startTime)
 
@@ -129,7 +96,7 @@ df_sites_clu.to_csv('output/SITES_CLU.csv', index = False)
 endTime = datetime.now()
 print(endTime)
 
-#%% 2.1 Calculate errorKm distribution
+#%% 3.2.4 - Distribución del error de las celdas
 df_cells_clu = pd.read_csv('output/CELLS_CLU.csv')
 df_sites_clu = pd.read_csv('output/SITES_CLU.csv')
 
@@ -145,7 +112,7 @@ print("SITES errorKm_mean")
 print(str(df_sites_clu.errorKm_mean.describe(percentiles = p)))
 print()
 
-#%% 3.1 - Delete sites with much error after clustering
+#%% 3.2.5 - Eliminamos celdas con mucho error con el Método B
 startTime = datetime.now()
 print(startTime)
 
@@ -162,7 +129,9 @@ df_sites_clean_1.to_csv('output/SITES_CLEAN_1.csv', index = False)
 endTime = datetime.now()
 print(endTime)
 
-#%% 3.2 - Delete sites with much error after clustering (15 min)
+#%% 3.2.5 - Eliminamos celdas con mucho error con el Método A
+# Tiempo estimado de ejecucion: 15 min
+
 startTime = datetime.now()
 print(startTime)
 
@@ -185,7 +154,7 @@ df_sites_clean_2.to_csv('output/SITES_CLEAN_2.csv', index = False)
 endTime = datetime.now()
 print(endTime)
 
-#%% 4 Band info to the sites dataframe
+#%% 3.2.6 - Añadimos informacion de las bandas de frecuencia en cada estación
 startTime = datetime.now()
 print(startTime)
 
@@ -199,7 +168,8 @@ df_sites_band.to_csv('output/SITES_BAND.csv', index = False)
 endTime = datetime.now()
 print(endTime)
 
-#%% 100 - Map Plot before and after clustering
+#%% 3.2.4 - Resultados de agrupar celdas en estaciones
+# 3.2.5 - Resultados del Metodo A y Metodo B
 df_cells = pd.read_csv('output/CELLS.csv')
 df_cells_clu = pd.read_csv('output/CELLS_CLU.csv')
 df_cells_clean_1 = pd.read_csv('output/CELLS_CLEAN_1.csv')
@@ -210,12 +180,13 @@ dis.plot(df_cells_clu, 'net', "Cells Clustered")
 dis.plot(df_cells_clean_1, 'net', "Cells Clustered Clean 1")
 dis.plot(df_cells_clean_2, 'net', "Cells Clustered Clean 2")
 
-#%% Celdas segun la banda
+#%% 3.2.6 - Mapa de la distribucion geografica de la banda de frecuencia
+
 df_cells_clean_2 = pd.read_csv('output/CELLS_CLEAN_2.csv')
 df = df_cells_clean_2.sort_values('band')
 dis.plot(df, 'band', "Cells Clustered Clean 2")
 
-#%% 101 - Print data overview
+#%% 3.2.9 - Resumen de la infraestructura de red movil
 
 df_cells_clu = pd.read_csv('output/CELLS_CLU.csv')
 df_sites_clu = pd.read_csv('output/SITES_CLU.csv')
@@ -231,7 +202,7 @@ cel.df_overview(df_cells_clu, group_subset, "Cells Clustered")
 cel.df_overview(df_cells_clean_1, group_subset, "Cells Clustering Clean 1")
 cel.df_overview(df_cells_clean_2, group_subset, "Cells Clustering Clean 2")
 
-#%% Estudio de casos concretos de clean clustering
+#%% 3.2.5 - Estudio de casos concretos de la eliminacion con Metodo A y B
 
 #c = [7, 380155]
 #c = [7, 351084]
@@ -263,9 +234,8 @@ dis.plot_cluestering(dfc, dfs, 'type', str(c)+" Before")
 
 #%% ------------ useful code -------------------
         
-df[(df.net==1)&(df.area==3090)&(df.enbid==73209)]
-condition_sites = (df_sites_2.net!=i[0])|(df_sites_2.area!=i[1])\
-            |(df_sites_2.enbid!=i[2])
-            
-df_no_dup.groupby(['net','cell']).size().value_counts()
+#df[(df.net==1)&(df.area==3090)&(df.enbid==73209)]
+#condition_sites = (df_sites_2.net!=i[0])|(df_sites_2.area!=i[1])\
+#            |(df_sites_2.enbid!=i[2])           
+#df_no_dup.groupby(['net','cell']).size().value_counts()
 

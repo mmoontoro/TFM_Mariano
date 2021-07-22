@@ -2,9 +2,26 @@
 """
 Created on Fri Feb  5 13:56:49 2021
 
-@author: Mariano
+@author: Mariano Montoro Mendoza
+
+Script dedicado a asignar la informacion geografica a cada estacion. Esta 
+información geografica consiste en el municipio donde se encuentra la estacion, 
+la poblacion de ese municipio, la provincia y la comunidad autonoma. La fuente 
+de esta informacion es el INE.
+
+Lo que se ejecuta en este script esta descrito en el apartado 
+"3.2.7 Asignacion de informacion geografica" y "3.2.8 Estimacion de la 
+precision de los datos" del documento de mi Trabajo Fin de Master (TFM). 
+
+Titulo: "Caracterizacion sectorial de la conectividad movil 
+en España mediante datos abiertos".
+Autor: Mariano Montoro Mendoza.
+Tutora: Zoraida Frías Barroso.
+Cotutor: Luis Mendo Tomás.
+Fecha de lectura: 14 de julio de 2021.
+
 """
-# Load LIBRARIES
+
 import os
 tfm_dir = "D://Dropbox/Escritorio/TFM/Workspace_spyder/" 
 os.chdir(tfm_dir)
@@ -14,7 +31,9 @@ import geopandas as gpd
 import plotly.express as px
 import plotly.offline as off
 
-#%% 1 - Create Rejilla (30s)
+#%% 3.2.7 - Creacion de una rejilla de municipios desde los datos Oficiales
+# Tiempo estimado de ejecucion: 30 s
+
 muni_ini = gpd.read_file(tfm_dir + \
             "seccionado_2020/SECC_CE_20200101.shp")
 pop_ini = pd.read_excel("input/catastro_prov.xls")
@@ -23,7 +42,8 @@ muni_pop = geo.create_map_pop(muni_ini, pop_ini)
 
 muni_pop.to_file("output/REJILLA.shp")
 
-#%% 2.1 - Assign Muni, Prov, ComA, PostC to each site (1h)
+#%% 3.2.7 - Primera asignacion de informacion geografica a las estaciones
+# Tiempo estimado de ejecucion: 1 h
 
 muni_pob = gpd.read_file("output/REJILLA.shp")
 
@@ -31,7 +51,8 @@ df_sites_1 = pd.read_csv('output/SITES_BAND.csv')
 df_sites_2 = geo.addMuniProvComA(df_sites_1, muni_pob)
 df_sites_2.to_file('output/SITES_MUN_1.shp', index = False)
 
-#%% 2.2 Plot sites without municipality and also polygons (optional)
+#%% 3.2.7 - Resultados de la primera asignacion
+
 gdf_1 = gpd.read_file('output/SITES_MUN_1.shp')
 gdf_1 = gdf_1[['codMun','pob','provincia','comunidadA','geometry','municipio']]
 gdf_1 = gdf_1[gdf_1.comunidadA == "_"]
@@ -47,14 +68,16 @@ ax = muni_pob.plot(column = "comunidadA", k = 9,\
                 alpha = 0.65, linewidth = 0.9, figsize = (60, 40))
 gdf_1.plot(ax=ax, marker='o', color='black', markersize=10)
 
-#%% 3.1 Recheck sites (6 min)
+#%% 3.2.7 - Segunda asignacion de informacion geografica a las estaciones
+# Tiempo estimado de ejecucion: 6 min
 muni_pob = gpd.read_file("output/REJILLA.shp")
 df_sites_2 = gpd.read_file('output/SITES_MUN_1.shp')
 df_sites_3 = geo.tag_comA(df_sites_2, muni_pob)
 df_sites_4 = geo.tag_prov(df_sites_3, muni_pob)
 df_sites_4.to_file('output/SITES_MUN_2.shp', index = False)
 
-#%% 3.3 Plot sites final and also polygons
+#%% 3.2.7 - Resultados de la segunda asignacion
+
 gdf_1 = gpd.read_file('output/SITES_MUN_2.shp')
 gdf_1 = gdf_1[['codMun','pob','provincia','comunidadA','geometry','municipio']]
 
@@ -68,7 +91,8 @@ ax = muni_pob.plot(column = "comunidadA", k = 9,\
 gdf_1.plot(ax=ax, marker='o', color='black', markersize=10)
 
 
-#%% 4.1 - Final Plot
+#%% 3.2.7 - Resultados de la informacion geografica
+
 df_sites_2 = gpd.read_file('output/SITES_MUN_1.shp')
 #plot_total(df, color, title)
 dis.plot(df_sites_2, 'comunidadA', "Sites incomplete")
@@ -77,7 +101,7 @@ df_sites_4 = gpd.read_file('output/SITES_MUN_2.shp')
 #plot_total(df, color, title)
 dis.plot(df_sites_4, 'comunidadA', "Sites complete")
 
-#%% 4.2 Overview Numbers
+#%% 3.2.8 - Overview de los datos por comunidad autonoma y provincia
 
 df_sites_2 = gpd.read_file('output/SITES_MUN_1.shp')
 
@@ -87,7 +111,16 @@ geo.df_overview(df_sites_2, "Primera Asignacion Sites")
 
 geo.df_overview(df_sites_4, "Segunda Asignacion Sites")
 
-#%% 5.1 Plot Provinces
+#%% 3.2.7 - Asignacion de informacion geografica a las estaciones (completo)
+
+muni_pob = gpd.read_file("output/REJILLA.shp")
+df_sites_1 = pd.read_csv('output/SITES_CAPACITY.csv')
+df_sites_2 = geo.addMuniProvComA(df_sites_1, muni_pob)
+df_sites_3 = geo.tag_comA(df_sites_2, muni_pob)
+df_sites_4 = geo.tag_prov(df_sites_3, muni_pob)
+df_sites_4.to_file('output/SITES_CAPACITY.shp', index = False)
+
+#%% 2.10 - Mapa de provincias
 muni_pob = gpd.read_file("output/REJILLA.shp")
 
 comA = muni_pob[['provincia','geometry']]
@@ -97,7 +130,8 @@ comA.plot(column = "provincia", k = 9,\
                 cmap = "Dark2", legend = False,\
                 alpha = 0.65, linewidth = 0.9, figsize = (60, 40))
 
-#%% 5.2 Plot Comunidades Autonomas
+#%% 2.10 - Mapa de comunidades autonomas
+
 muni_pob = gpd.read_file("output/REJILLA.shp")
 
 comA = muni_pob[['comunidadA','geometry']]
@@ -107,7 +141,7 @@ comA.plot(column = "comunidadA", k = 9,\
                 cmap = "Dark2", legend = True,\
                 alpha = 0.65, linewidth = 0.9, figsize = (60, 40))
     
-#%% Example Choropleth
+#%% Ejemplo de un plot con Choropleth
 muni_pob = gpd.read_file("output/REJILLA.shp")
 gdf_2 = muni_pob[(muni_pob.comunidadA == "Extremadura")|
                  (muni_pob.comunidadA == "Comunidad de Madrid")|
