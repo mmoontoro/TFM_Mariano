@@ -13,6 +13,28 @@ from shapely.geometry import Point
 from datetime import datetime
 
 def nearest_total(df_sector, df_sites):
+    '''
+    Calcula la distancia desde cada nodo de un sector economico dado, hasta 
+    la estaciones y celdas mas cercanas. Asigna esta informacion de distancias 
+    al dataframe del sector economico. Devuelve este nuevo dataframe que ahora 
+    contiene informacion sobre la conectividad movil de cada uno de sus nodos.
+    
+    Apartado TFM: "3.3.2 Caracterización de la conectividad movil"
+
+    Parameters
+    ----------
+    df_sector : dataframe
+        nodos de un sector economico.
+    df_sites : dataframe
+        estaciones.
+
+    Returns
+    -------
+    df : dataframe
+        nodos del sector economico con nuevas columnas con la informacion de
+        distancia a las estaciones y celdas mas cercanas.
+
+    '''
     print("-----------------------------------")
     print("Start find nearest cells")
     startTime = datetime.now()
@@ -63,15 +85,55 @@ def nearest_total(df_sector, df_sites):
     return df
 
 def nearest(point, df):
-     # find the nearest point and return the corresponding Place value
-     pts = df.geometry.unary_union
-     nearest = df.geometry == nearest_points(point, pts)[1]
-     lat_site = df[nearest].geometry.values[0].y
-     lon_site = df[nearest].geometry.values[0].x
-     dist_km = distance_calc(lat_site, lon_site, point.y, point.x)
-     return dist_km
+    '''
+    Calcula la distancia en kilometros desde un punto dado, a otro punto (el 
+    punto mas cercano al primero de entre todos los puntos de un dataframe 
+    dado).
+
+
+    Apartado TFM: "3.3.2 Caracterización de la conectividad movil"
+
+    Parameters
+    ----------
+    point : point
+        punto.
+    df : dataframe
+        dataframe de puntos, de entre los cuales encontraremos el mas cercano.
+
+    Returns
+    -------
+    dist_km : float
+        distancia en km desde el punto al punto mas cercano del dataframe.
+
+    '''
+    pts = df.geometry.unary_union
+    nearest = df.geometry == nearest_points(point, pts)[1]
+    lat_site = df[nearest].geometry.values[0].y
+    lon_site = df[nearest].geometry.values[0].x
+    dist_km = distance_calc(lat_site, lon_site, point.y, point.x)
+    return dist_km
 
 def create_map_pop(muni_ini, pop_ini):
+    '''
+    Crea un geodataframe de los poligonos de todos los municipios, añadiendo 
+    informacion de la poblacion de cada municipio.
+    
+    Apartado TFM: "3.1.7 Asignacion de información geográfica"
+    Apartado TFM: "3.2.7 Asignacion de información geográfica"
+
+    Parameters
+    ----------
+    muni_ini : geodataframe
+        poligonos de todos los municipios de españa sin datos de poblacion.
+    pop_ini : dataframe
+        datos de poblacion por municipio en españa.
+
+    Returns
+    -------
+    muni_pop : geodataframe
+        poligonos de todos los municipios de españa con datos de poblacion.
+
+    '''
     print("-----------------------------------")
     print("Start create map")
     startTime = datetime.now()
@@ -99,6 +161,29 @@ def create_map_pop(muni_ini, pop_ini):
     return muni_pop
 
 def addMuniProvComA(df_ini, muni_pob):
+    '''
+    Asigna informacion geografica a un dataframe. Solo asigna tal informacion 
+    a aquellos puntos que se encuentran dentro del poligono de algun municipio,
+    el resto de puntos quedan sin informacion geografica.
+    
+    
+    Apartado TFM: "3.1.7 Asignacion de información geográfica"
+    Apartado TFM: "3.2.7 Asignacion de información geográfica"
+
+    Parameters
+    ----------
+    df_ini : dataframe
+        dataframe sin informacion geografica.
+    muni_pob : geodataframe
+        poligonos de todos los municipios de españa.
+
+    Returns
+    -------
+    df_muni : geodataframe
+        dataframe con informacion geografica, pero puede haber filas 
+        incompletas por no estar dentro de ningun municipio.
+
+    '''
     startTime = datetime.now()
     print(startTime)
     print("Start add Muni Prov and ComA")
@@ -132,6 +217,27 @@ def addMuniProvComA(df_ini, muni_pob):
     return df_muni
 
 def tag_comA(gdf_ini, muni_pob):
+    '''
+    Asigna a cada punto de un geodataframe la comunidad autonoma más cercana 
+    a ese punto.
+    
+    Apartado TFM: "3.1.7 Asignacion de información geográfica"
+    Apartado TFM: "3.2.7 Asignacion de información geográfica"
+
+    Parameters
+    ----------
+    gdf_ini : geodataframe
+        dataframe con informacion geografica incompleta en algunas filas.
+    muni_pob : geodataframe
+        poligonos de todos los municipios de españa.
+
+    Returns
+    -------
+    gdf : geodataframe
+        dataframe con informacion geografica completa en la columna de 
+        comunidades autonomas.
+
+    '''
     print("Start tagging comunidadA")
     comA = muni_pob[['comunidadA','geometry']]
     comA = comA.dissolve(by='comunidadA')
@@ -160,6 +266,26 @@ def tag_comA(gdf_ini, muni_pob):
     return gdf
 
 def tag_prov(gdf_ini, muni_pob):
+    '''
+    Asigna a cada punto de un geodataframe la provincia más cercana a ese punto.
+    
+    Apartado TFM: "3.1.7 Asignacion de información geográfica"
+    Apartado TFM: "3.2.7 Asignacion de información geográfica"
+
+    Parameters
+    ----------
+    gdf_ini : geodataframe
+        dataframe con informacion geografica incompleta en algunas filas.
+    muni_pob : geodataframe
+        poligonos de todos los municipios de españa.
+
+    Returns
+    -------
+    gdf : geodataframe
+        dataframe con informacion geografica completa en la columna de 
+        provincias.
+
+    '''
     print("Start tagging provincia")
     prov = muni_pob[['provincia','geometry']]
     prov = prov.dissolve(by='provincia')
@@ -188,6 +314,28 @@ def tag_prov(gdf_ini, muni_pob):
     return gdf
 
 def distance_calc(lat1, lon1, lat2, lon2):
+    '''
+    Calcula la distancia en kilometros entre dos puntos dados.
+    
+    Apartado TFM: N/A
+
+    Parameters
+    ----------
+    lat1 : float
+        latitud del punto 1.
+    lon1 : float
+        longitud del punto 1.
+    lat2 : float
+        latitud del punto 2.
+    lon2 : float
+        longitud del punto 2.
+
+    Returns
+    -------
+    distance : float
+        distancia entre dos puntos.
+
+    '''
     # approximate radius of earth in km
     R = 6373.0
     lat1 = radians(lat1)
@@ -204,6 +352,24 @@ def distance_calc(lat1, lon1, lat2, lon2):
     return distance
 
 def df_overview(df, title):
+    '''
+    Imprime una vision global sobre la informacion geografica de un dataframe.
+    
+    Apartado TFM: "3.2.8 Estimacion de la precision de los datos"
+
+    Parameters
+    ----------
+    df : geodataframe
+        dataframe del cual queremos tener una vision global de su informacion 
+        geografica.
+    title : string
+        titulo que identifica al geodataframe.
+
+    Returns
+    -------
+    None.
+
+    '''
     print("------------------------------------------------")
     print("Start " +title+ " overview")
     print("---------------------Total----------------------")

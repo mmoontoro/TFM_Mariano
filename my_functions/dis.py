@@ -9,6 +9,27 @@ import plotly.express as px
 import plotly.offline as off
 
 def plot(df, column_color, title):
+    '''
+    Muestra en un mapa los datos de un dataframe, utilizando las columnas 
+    site_lat y site_lon para definir la posicion geografica de cada punto en 
+    el mapa.
+    
+    Apartado TFM: "3.2.9 Resumen de Infraestructura de red movil"
+
+    Parameters
+    ----------
+    df : dataframe
+        datos a imprimir en el mapa.
+    column_color : string
+        columna para agregar los datos en la representacion grafica.
+    title : TYPE
+        titulo que identifica al plot.
+
+    Returns
+    -------
+    None.
+
+    '''
     print("----------------------------")
     print("Start Plot " + title)
     print("Total: "+str(df.shape[0]))
@@ -28,7 +49,29 @@ def plot(df, column_color, title):
     off.plot(fig, auto_open = True, filename=title + '.html')
     print("End Plot " + title)
 
-def plot_cluestering(df_cells, df_sites, column_color, title):
+def plot_clustering(df_cells, df_sites, column_color, title):
+    '''
+    Muestra en un mapa las celdas de una estacion y el centro de dicha 
+    estacion, que es la media de las posiciones de sus celdas.
+    
+    Apartado TFM: "3.2.5 Mejora de posicion de las estaciones"
+
+    Parameters
+    ----------
+    df_cells : dataframe
+        celdas de la estacion o estaciones a representar.
+    df_sites : dataframe
+        estacion o estaciones a representar.
+    column_color : string (dataframe column)
+        columna para agregar los datos en la representacion grafica..
+    title : string
+        titulo que identifica al plot.
+
+    Returns
+    -------
+    None.
+
+    '''
     print("----------------------------")
     print("Start Plot " + title)
     print("Total: "+str(df_cells.shape[0]))
@@ -71,6 +114,29 @@ def plot_cluestering(df_cells, df_sites, column_color, title):
     print("End Plot " + title)
     
 def plot_final(df, title):
+    '''
+    Representa en un mismo mapa las estaciones y los nodos de los sectores 
+    economicos. Para que esto sea asi, el dataframe de entrada debe estar 
+    preparado para esto.
+    
+    Apartado TFM: "3.2.9 Resumen de la infraestructura de red movil"
+    Apartado TFM: "3.1 Sectores priorizados por el Plan España Digital 2025"
+
+    Parameters
+    ----------
+    df : dataframe
+        dataframe de estaciones y nodos de los sectores economicos a mezclar,
+        se trata de un dataframe especialmente preparado para la representacion
+        grafica en un mapa ya que solo contiene la informacion que va a ser 
+        representada.
+    title : string
+        titulo que identifica al plot.
+
+    Returns
+    -------
+    None.
+
+    '''
     print("Start " + title)
     print("    "+str(df.shape[0])+" nodes to plot")
     #To use a column as text, convert the column to str

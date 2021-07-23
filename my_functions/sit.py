@@ -5,11 +5,24 @@ Created on Wed May 26 18:28:29 2021
 @author: Mariano
 """
 import pandas as pd
-from my_functions import geo
-from collections import Counter
 
 # FUNCTIONS
 def df_overview(df_sites):
+    '''
+    Imprime en la pantalla una vision general de un dataframe de estaciones.
+    
+    Apartado TFM: "3.2.9 Resumen de Infraestructura de red movil"
+
+    Parameters
+    ----------
+    df_sites : dataframe
+        estaciones de las que tenemos tener una vision general.
+
+    Returns
+    -------
+    None.
+
+    '''
     n_800 = df_sites[df_sites.cells800 > 0].shape[0]
     n_900 = df_sites[df_sites.cells900 > 0].shape[0]
     n_1800 = df_sites[df_sites.cells1800 > 0].shape[0]
@@ -71,6 +84,23 @@ def df_overview(df_sites):
         
         
 def capacity_calc(df_ini):
+    '''
+    Añade la informacion de la capacidad a cada estacion, utilizando la 
+    informacion de la banda de frecuencia de cada celda añadida previamente.
+    
+    Apartado TFM: "3.2.6 Calculo de la capcidad de las estaciones"
+
+    Parameters
+    ----------
+    df_ini : dataframe
+        estaciones sin informacion de capacidad.
+
+    Returns
+    -------
+    df_sites : dataframe
+        estaciones con informacion de capacidad.
+
+    '''
     print("-----------------------------------")
     print("Start Capacity Calculation")
     df_sites = df_ini.copy()

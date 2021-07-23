@@ -8,11 +8,37 @@ import requests
 import json
 import pandas as pd
 import time
-import json
 import sys
 
-# FUNCTIONS
 def get_tag(layer, tag, key):
+    '''
+    Realiza queries a OpenStreetMap y almacena los datos en un dataframe. Los 
+    nodos los almacena como puntos y las areas las almacena como puntos tambien 
+    (siendo el centro del area la posicion de ese punto).
+    
+    Apartado TFM: "3.1.6 Almacenamiento de los datos"
+
+    Parameters
+    ----------
+    layer : string
+        sector economico.
+    tag : string
+        etiqueta de OpenStreetMap.
+    key : string
+        valor de la etiqueta de OpenStreetMap de los nodos y areas que vamos 
+        a descargar de OpenStreetMap.
+
+    Returns
+    -------
+    df : dataframe
+        nodos y ways del sector economico que hemos descargado de OSM.
+    data_node : dict
+        todos los datos que nos ha proporcionado la query de nodos de OSM.
+    data_way : dict
+        todos los datos que nos ha proporcionado la query de ways de OSM.
+
+    '''
+    
     print("Start get " + tag +": " + key)
     df = pd.DataFrame(columns = ['id','lon','lat','layer','hover','name'])
     id_row = 0
@@ -88,6 +114,30 @@ def get_tag(layer, tag, key):
     return df, data_node, data_way
     
 def get_node(layer, tag, key):
+    '''
+    Realiza queries a OpenStreetMap y almacena los datos en un dataframe.
+    
+    Apartado TFM: "3.1.6 Almacenamiento de los datos"
+
+    Parameters
+    ----------
+    layer : string
+        sector economico.
+    tag : string
+        etiqueta de OpenStreetMap.
+    key : string
+        valor de la etiqueta de OpenStreetMap de los nodos que vamos
+        a descargar de OpenStreetMap.
+
+    Returns
+    -------
+    df : dataframe
+        nodos del sector economico que hemos descargado de OSM.
+    data : dict
+        todos los datos que nos ha proporcionado la query de nodos de OSM.
+
+    '''
+    
     print("Start get " + tag +": " + key)
     df = pd.DataFrame(columns = ['id','lon','lat','layer','hover','name'])
     id_row = 0
@@ -129,6 +179,32 @@ def get_node(layer, tag, key):
     return df, data
 
 def get_way_as_point(layer, tag, key):
+    '''
+    Realiza queries a OpenStreetMap y almacena los datos en un dataframe. las 
+    areas las almacena como puntos (siendo el centro del area la posicion de 
+    ese punto).
+    
+    Apartado TFM: "3.1.6 Almacenamiento de los datos"
+
+    Parameters
+    ----------
+    layer : string
+        sector economico.
+    tag : string
+        etiqueta de OpenStreetMap.
+    key : string
+        valor de la etiqueta de OpenStreetMap de los ways que vamos
+        a descargar de OpenStreetMap.
+
+    Returns
+    -------
+    df : dataframe
+        nodos del sector economico que hemos descargado de OSM..
+    data : dict
+        todos los datos que nos ha proporcionado la query de ways de OSM.
+
+    '''
+    
     print("Start get " + tag +": " + key)
     df = pd.DataFrame(columns = ['id','lon','lat','layer','hover','name'])
     id_row = 0
@@ -170,6 +246,32 @@ def get_way_as_point(layer, tag, key):
     return df, data
 
 def get_area(layer, tag, key):
+    '''
+    Realiza queries a OpenStreetMap y almacena los datos en un dataframe. Las 
+    areas las almacena como puntos (siendo el centro del area la posicion de 
+    ese punto).
+    
+    Apartado TFM: "3.1.6 Almacenamiento de los datos"
+
+    Parameters
+    ----------
+    layer : string
+        sector economico.
+    tag : string
+        etiqueta de OpenStreetMap.
+    key : string
+        valor de la etiqueta de OpenStreetMap de las areas que vamos
+        a descargar de OpenStreetMap.
+
+    Returns
+    -------
+    df : dataframe
+        nodos del sector economico que hemos descargado de OSM.
+    data : dict
+        todos los datos que nos ha proporcionado la query de areas de OSM.
+
+    '''
+    
     print("Start get " + tag +": " + key)
     df = pd.DataFrame(columns = ['id','lon','lat','layer','hover','name'])
     id_row = 0
@@ -211,6 +313,25 @@ def get_area(layer, tag, key):
     return df, data
 
 def adjust_sites_df_net(df_ini):
+    '''
+    Modifica las columnas del dataframe de estaciones para representarlas 
+    graficamente en un mapa, donde se pueda resaltar las diferentes posiciones 
+    de las estaciones segun el operador de red.
+    
+    Apartado TFM: "3.2.9 Resumen de Infraestructura de red movil"
+
+    Parameters
+    ----------
+    df_ini : dataframe
+        estaciones de entrada.
+
+    Returns
+    -------
+    df : dataframe
+        estaciones con las columnas modificadas para ser representadas en un 
+        mapa.
+
+    '''
     
     df = df_ini.copy()
         
@@ -228,6 +349,25 @@ def adjust_sites_df_net(df_ini):
     return df
 
 def adjust_sites_df_cap(df_ini):
+    '''
+    Modifica las columnas del dataframe de estaciones para representarlas 
+    graficamente en un mapa, donde se pueda resaltar las diferentes posiciones 
+    de las estaciones segun su capacidad.
+    
+    Apartado TFM: "3.2.6 Calculo de la capcidad de las estaciones"
+
+    Parameters
+    ----------
+    df_ini : dataframe
+        estaciones de entrada.
+
+    Returns
+    -------
+    df : dataframe
+        estaciones con las columnas modificadas para ser representadas en un 
+        mapa.
+
+    '''
     
     df = df_ini.copy()
         

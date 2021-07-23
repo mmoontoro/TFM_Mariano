@@ -8,8 +8,25 @@ import pandas as pd
 from my_functions import geo
 from collections import Counter
 
-# FUNCTIONS
 def clean_df(df_raw, str_cleaning_id):
+    '''
+    Filtra las filas del dataframe para conservar solo las que interesan.
+    
+    Apartado TFM: "3.2.1 Filtrado inicial de los datos abiertos"
+
+    Parameters
+    ----------
+    df_raw : dataframe
+        todas las celdas descargadas de la fuente de datos.
+    str_cleaning_id : string
+        nombre que identifica al dataframe.
+
+    Returns
+    -------
+    df_fil : dataframe
+        celdas que nos interesan.
+
+    '''
     print("-----------------------------------")
     print("Start Clean " + str_cleaning_id)
     df_fil = df_raw.copy()
@@ -31,6 +48,23 @@ def clean_df(df_raw, str_cleaning_id):
     return df_fil
 
 def del_dup_recent_area(df_dup):
+    '''
+    Recorre todas las estaciones que tengan más de un TAC, y mantiene todas 
+    las celdas de aquella estacion con un codigo TAC más reciente.
+    
+    Apartado TFM: "3.2.2 Eliminacion de celdas duplicadas debido al codigo de area"
+
+    Parameters
+    ----------
+    df_dup : dataframe
+        dataframe con algunas celdas duplicadas.
+
+    Returns
+    -------
+    df_no_dup : dataframe
+        dataframe de celdas, sin celdas duplicadas.
+
+    '''
     print("-----------------------------------")
     print("Start Delete Duplicates keeping most recent area site")
     set_sites = ['enbid', 'net', 'mcc']
@@ -128,6 +162,26 @@ def del_dup_recent_area(df_dup):
     return df_no_dup
 
 def del_dup_max_samples(df_dup, my_subset):
+    '''
+    Elimina las celdas repetidas (aquellas con valores repetidos en todas  
+    las columnas del subset), manteniendo unicamente aquella celda con 
+    mayor numero de muestras.
+    
+    Apartado TFM: N/A
+
+    Parameters
+    ----------
+    df_dup : dataframe
+        dataframe de celdas con duplicados.
+    my_subset : list
+        lista de columnas que definen que exista duplicidad.
+
+    Returns
+    -------
+    df_no_dup : dataframe
+        datframe de celdas sin duplicados.
+
+    '''
     print("-----------------------------------")
     print("Start Delete Duplicates keeping cell with maximum samples")
     
@@ -149,6 +203,26 @@ def del_dup_max_samples(df_dup, my_subset):
     return df_no_dup
 
 def cells_clustering(df_ini):
+    '''
+    Agrupa las celdas con el mismo codigo de estacion en la misma posicion.
+    Añade nuevas columnas al dataframe de celdas. Crea un nuevo dataframe 
+    de estaciones, indicando cuantas celdas hay encada estacion.
+    
+    Apartado TFM: "3.2.4 Creación del dataframe de estaciones inicial"
+
+    Parameters
+    ----------
+    df_ini : dataframe
+        dataframe de celdas inicial.
+
+    Returns
+    -------
+    df_cells : dataframe
+        dataframe de celdas con las nuevas columnas.
+    df_sites : dataframe
+        dataframe de estaciones inicial.
+
+    '''
     print("-----------------------------------")
     print("Start Cells Clustering")
     df_cells = df_ini.copy()
@@ -186,6 +260,39 @@ def cells_clustering(df_ini):
 
 
 def clean_clustering(df_cells_1, df_sites_1, n_iter, threshold_km):
+    '''
+    Método A de mejora de la posicion de las estaciones.
+    1. De todas las estaciones con celdas con error por encima del percentil 
+    95% inicial, eliminar solo una celda por estación.
+    2.	Recalcular la media de la posición y el nuevo error de las celdas 
+    restantes de cada estación.
+    3.	Volver a iterar hasta que el error todas las celdas quede por debajo 
+    del percentil 95% inicial.
+    
+    Apartado TFM: "3.2.5 Mejora de posicion de las estaciones"
+
+    Parameters
+    ----------
+    df_cells_1 : dataframe
+        celdas iniciales, algunas de ellas con error por encima del umbral.
+    df_sites_1 : dataframe
+        estacione iniciales, algunas de ellas con error por encima del umbral.
+    n_iter : integer
+        indice de la iteracion, numero de veces que se ha pasado el dataframe 
+        inicial por esta funcion recursiva.
+    threshold_km : float
+        umbral de error.
+
+    Returns
+    -------
+    df_cells_fin : dataframe
+        celdas tras iterar con el metodo A. En caso de que todas tengan un 
+        error por debajo del umbral, no se volvera a iterar en esta funcion.
+    df_sites_fin : dataframe
+        estaciones tras iterar con el metodo A. En caso de que todas tengan un 
+        error por debajo del umbral, no se volvera a iterar en esta funcion.
+
+    '''
     i_c_c = 0
     i_s_s = 0
     if n_iter == 1:
@@ -290,10 +397,29 @@ def clean_clustering(df_cells_1, df_sites_1, n_iter, threshold_km):
     return df_cells_fin, df_sites_fin
 
 def add_band(df_ini):
+    '''
+    Añade la inforacion de la banda de frecuencia a cada celda, utilizando las
+    correspondencias entre el cellid y la banda que proporciona la fuente de 
+    datos CellMapper.
+    
+    Apartado TFM: "3.2.6 Calculo de la capcidad de las estaciones"
+
+    Parameters
+    ----------
+    df_ini : dataframe
+        celdas sin informacion de banda de frecuencia.
+
+    Returns
+    -------
+    df : dataframe
+        celdas con informacion de banda de frecuencia..
+
+    '''
     df = df_ini.copy()
     print("-----------------------------------")
     print("Start adding band")
     df['band'] = 0
+    #diccionarios proporcionados por CellMapper
     #MOVISTAR
     mov_dict = {1800: [10,20,30,40,50,60,70,80,1,2,3,101],\
                 800: [11,21,31,41,51,61,8,9],\
@@ -331,6 +457,27 @@ def add_band(df_ini):
     return df
 
 def df_overview(df, group_subset, title):
+    '''
+    Imprime en la pantalla una vision general de un dataframe de celdas.
+    Informa sobre el numero de celdas y estacion por operador y por fuente de 
+    datos.
+    
+    Apartado TFM: "3.2.9 Resumen de la infraestructura de red movil"
+
+    Parameters
+    ----------
+    df : dataframe
+        dataframe del que queremos saber informacion.
+    group_subset : list
+        columnas que definen un grupo, por ejemplo una estacion.
+    title : string
+        nombre que identifica al dataframe.
+
+    Returns
+    -------
+    None.
+
+    '''
     print("-----------------------------------")
     print("Start " +title+ " overview")
     
@@ -367,6 +514,25 @@ def df_overview(df, group_subset, title):
     
 
 def add_sites_band(df_cells_ini, df_sites_ini):
+    '''
+    Añade la inforacion de la banda de frecuencia a cada estacion, utilizando
+    la informacion de la banda de frecuencia de cada celda.
+    
+    Apartado TFM: "3.2.6 Calculo de la capcidad de las estaciones"
+
+    Parameters
+    ----------
+    df_cells_ini : dataframe
+        celdas con informacion de la banda de frecuencia.
+    df_sites_ini : dataframe
+        estaciones sin informacion de la banda de frecuencia.
+
+    Returns
+    -------
+    df_sites : dataframe
+        estaciones con informacion de la banda de frecuencia..
+
+    '''
     print("-----------------------------------")
     print("Start add band info to sites dataframe")
     df_cells = df_cells_ini.copy()
